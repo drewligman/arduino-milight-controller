@@ -1,7 +1,7 @@
 #include <AboutHelper.h>
 #include <ArduinoJson.h>
 #include <Settings.h>
-#include <ESP8266WiFi.h>
+
 
 String AboutHelper::generateAboutString(bool abbreviated) {
   DynamicJsonDocument buffer(1024);
