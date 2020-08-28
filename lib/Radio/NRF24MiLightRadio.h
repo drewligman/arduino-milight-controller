@@ -19,9 +19,9 @@
 class NRF24MiLightRadio : public MiLightRadio {
   public:
     NRF24MiLightRadio(
-      RF24& rf, 
-      const MiLightRadioConfig& config, 
-      const std::vector<RF24Channel>& channels, 
+      RF24& rf,
+      const MiLightRadioConfig& config,
+      const std::vector<RF24Channel>& channels,
       RF24Channel listenChannel
     );
 
@@ -32,6 +32,7 @@ class NRF24MiLightRadio : public MiLightRadio {
     int write(uint8_t frame[], size_t frame_length);
     int resend();
     int configure();
+    void scanChannels();
     const MiLightRadioConfig& config();
 
   private:

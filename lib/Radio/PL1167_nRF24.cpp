@@ -154,6 +154,7 @@ int PL1167_nRF24::transmit(uint8_t channel) {
 
   yield();
 
+  printf("\"%u\", ", _radio.getChannel());
   _radio.write(tmp, outp);
   return 0;
 }

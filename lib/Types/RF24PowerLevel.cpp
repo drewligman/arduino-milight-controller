@@ -12,7 +12,7 @@ String RF24PowerLevelHelpers::nameFromValue(const RF24PowerLevel& value) {
   const size_t ix = static_cast<size_t>(value);
 
   if (ix >= size(RF24_POWER_LEVEL_NAMES)) {
-    Serial.println(F("ERROR: unknown RF24 power level label - this is a bug!"));
+    //Serial.println(F("ERROR: unknown RF24 power level label - this is a bug!"));
     return nameFromValue(defaultValue());
   }
 
@@ -26,7 +26,7 @@ RF24PowerLevel RF24PowerLevelHelpers::valueFromName(const String& name) {
     }
   }
 
-  Serial.printf_P(PSTR("WARN: tried to fetch unknown RF24 power level: %s, using default.\n"), name.c_str());
+  //Serial.printf_P(PSTR("WARN: tried to fetch unknown RF24 power level: %s, using default.\n"), name.c_str());
 
   return defaultValue();
 }

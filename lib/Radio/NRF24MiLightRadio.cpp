@@ -123,17 +123,19 @@ int NRF24MiLightRadio::write(uint8_t frame[], size_t frame_length) {
 }
 
 int NRF24MiLightRadio::resend() {
-  for (std::vector<RF24Channel>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
-    size_t channelIx = static_cast<uint8_t>(*it);
-    uint8_t channel = _config.channels[channelIx];
-
-    _pl1167.writeFIFO(_out_packet, _out_packet[0] + 1);
-    _pl1167.transmit(channel);
-  }
+    uint8_t channel = 35;
+    for(size_t reps = 0; reps < 20; reps++) {
+        _pl1167.writeFIFO(_out_packet, _out_packet[0] + 1);
+        _pl1167.transmit(channel);
+    }
 
   return 0;
 }
 
 const MiLightRadioConfig& NRF24MiLightRadio::config() {
   return _config;
+}
+
+int NRF24MiLightRadio::dupesReceived() {
+    return _dupes_received;
 }
