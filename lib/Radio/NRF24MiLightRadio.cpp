@@ -127,7 +127,6 @@ int NRF24MiLightRadio::resend() {
   {
     _pl1167.writeFIFO(_out_packet, _out_packet[0] + 1);
     _pl1167.transmit(_config.channels[i]);
-    delayMicroseconds(DEFAULT_TIME_BETWEEN_RETRANSMISSIONS_uS);
   }
 
   return 0;

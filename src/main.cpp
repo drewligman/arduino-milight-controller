@@ -1,24 +1,29 @@
 #include <Arduino.h>
 #include <RF24.h>
-#include <RF24PowerLevel.h>
-#include <RF24Channel.h>
-#include <NRF24MiLightRadio.h>
-#include <MiLightRadioConfig.h>
-#include <V2RFEncoding.h>
 #include <printf.h>
 
-#define cePin 9
-#define csnPin 53
-#define PACKET_LEN 9
+#include "RF24PowerLevel.h"
+#include "RF24Channel.h"
+#include "NRF24MiLightRadio.h"
+#include "MiLightRadioConfig.h"
+#include "V2RFEncoding.h"
+#include "MiLightClient.h"
 
-MiLightRadioConfig config = MiLightRadioConfig::ALL_CONFIGS[2];
+#define CE_PIN 49
+#define CSN_PIN 53
 
-RF24 rf24(cePin, csnPin);
-NRF24MiLightRadio radio(rf24, config, RF24ChannelHelpers::allValues(), RF24Channel::RF24_LOW);
+RF24 rf24(CE_PIN, CSN_PIN);
 
-uint8_t send_packet[9];
-uint8_t read_frame[9];
-size_t read_frame_length;
+NRF24MiLightRadio radio(
+	rf24,
+	MiLightRadioConfig::ALL_CONFIGS[2],
+	RF24ChannelHelpers::allValues(),
+	RF24Channel::RF24_LOW
+);
+
+MiLightClient milight(radio);
+
+uint8_t packet[V2_PACKET_LEN];
 
 void printPacket(uint8_t* packet) {
 	for(int i = 0; i < 9; i++) {
@@ -31,43 +36,16 @@ void setup() {
 	Serial.begin(115200);
 	printf_begin();
 	printf("Setup\n");
-	radio.begin();
-
-	send_packet[0] = 0x00; // obfs key
-	send_packet[1] = 0x25; // protocolId, FUT089 = 0x25
-	send_packet[2] = 0x8B; // deviceId >> 8
-	send_packet[3] = 0x0D; // deviceId & 0xFF
-	send_packet[4] = 0x81; // cmd?
-	send_packet[5] = 0x09; // arg?
-	send_packet[6] = 0x00; // seq #
-	send_packet[7] = 0x00; // groupId
-	Serial.println("---");
-
+	milight.begin();
 }
 
 void loop() {
-	bool listening = true;
-	if(listening) {
-		if(radio.available()) {
-			printf("packet on channel %u", rf24.getChannel());
-			read_frame_length = PACKET_LEN;
-			radio.read(read_frame, read_frame_length);
-			printf(" of length %u: \n", read_frame_length);
-			//printPacket(read_frame);
-			V2RFEncoding::decodeV2Packet(read_frame);
-			printPacket(read_frame);
-			printf("*%u*", radio.dupesReceived());
-		}
-	} else {
-		printf("%u: ", send_packet[6]);
-		V2RFEncoding::encodeV2Packet(send_packet);
-		radio.write(send_packet, PACKET_LEN);
-		for(size_t i = 0; i < 20; i++) {
-			radio.resend();
-		}
-		V2RFEncoding::decodeV2Packet(send_packet);
-		//send_packet[5]++;
-		send_packet[6]++;
-		delay(500);
+	if(milight.available() && milight.read(packet)) {
+		printPacket(packet);
 	}
+
+	milight.setIdentity(0x8B0D);
+	milight.setGroup(0);
+	milight.updateStatus(true);
+	delay(1000);
 }

@@ -12,8 +12,7 @@
 #define _MILIGHT_RADIO_H_
 
 class MiLightRadio {
-  public:
-
+public:
     virtual int begin();
     virtual bool available();
     virtual int read(uint8_t frame[], size_t &frame_length);
@@ -21,10 +20,6 @@ class MiLightRadio {
     virtual int resend();
     virtual int configure();
     virtual const MiLightRadioConfig& config();
-
 };
-
-
-
 
 #endif

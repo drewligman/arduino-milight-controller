@@ -1,34 +1,42 @@
 #include <Arduino.h>
 #include "MiLightRadio.h"
 
-#define V2_PACKET_LEN 9
+const size_t V2_PACKET_LEN = 9;
+const size_t V2_NUM_GROUPS = 8;
+const uint8_t V2_PROTOCOL_ID = 0x25;
 
-#define V2_PROTOCOL_ID_INDEX 1
-#define V2_COMMAND_INDEX 4
-#define V2_ARGUMENT_INDEX 5
-
-#define V2_NUM_GROUPS 8
+enum MiLightFUT089PacketIndex {
+    V2_OBFS_KEY_INDEX = 0,
+    V2_PROTOCOL_ID_INDEX = 1,
+    V2_DEVICE_MSB_INDEX = 2,
+    V2_DEVICE_LSB_INDEX = 3,
+    V2_COMMAND_INDEX = 4,
+    V2_ARGUMENT_INDEX = 5,
+    V2_SEQN_INDEX = 6,
+    V2_GROUP_INDEX = 7,
+    V2_CHECKSUM_INDEX = 8
+};
 
 enum MiLightFUT089Command {
-  FUT089_ON_OFF = 0x01,
-  FUT089_COLOR = 0x02,
-  FUT089_BRIGHTNESS = 0x05,
-  FUT089_MODE = 0x06,
-  FUT089_KELVIN = 0x07,     // Controls Kelvin when in White mode
-  FUT089_SATURATION = 0x07,  // Controls Saturation when in Color mode
-  FUT089_NIGHT_MODE = 0x81
+    FUT089_ON_OFF = 0x01,
+    FUT089_COLOR = 0x02,
+    FUT089_BRIGHTNESS = 0x05,
+    FUT089_MODE = 0x06,
+    FUT089_KELVIN = 0x07,     // Controls Kelvin when in White mode
+    FUT089_SATURATION = 0x07,  // Controls Saturation when in Color mode
+    FUT089_NIGHT_MODE = 0x81
 };
 
 enum MiLightFUT089Arguments {
-  FUT089_MODE_SPEED_UP   = 0x12,
-  FUT089_MODE_SPEED_DOWN = 0x13,
-  FUT089_WHITE_MODE = 0x14,
-  FUT089_OFF_OFFSET = V2_NUM_GROUPS + 1
+    FUT089_MODE_SPEED_UP   = 0x12,
+    FUT089_MODE_SPEED_DOWN = 0x13,
+    FUT089_WHITE_MODE = 0x14,
+    FUT089_OFF_OFFSET = V2_NUM_GROUPS + 1
 };
 
 class MiLightClient {
 protected:
-    MiLightRadio _radio;
+    MiLightRadio& _radio;
     size_t _resendCount;
 
     uint16_t _deviceId;
@@ -44,7 +52,8 @@ public:
 
     ~MiLightClient() { }
 
-    void setGroup(const uint8_t groupId, const uint16_t deviceId);
+    void setGroup(const uint8_t groupId);
+    void setIdentity(const uint16_t deviceId);
     void setResendCount(const size_t resendCount);
 
     void begin() { _radio.begin(); }
@@ -55,7 +64,6 @@ public:
 
     // Common methods
     void updateStatus(const bool status);
-    void updateGlobalStatus(const bool status);
     void pair();
     void unpair();
 

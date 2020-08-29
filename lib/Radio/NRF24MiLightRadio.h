@@ -16,8 +16,6 @@
 #ifndef _NRF24_MILIGHT_RADIO_H_
 #define _NRF24_MILIGHT_RADIO_H_
 
-#define DEFAULT_TIME_BETWEEN_RETRANSMISSIONS_uS	350
-
 class NRF24MiLightRadio : public MiLightRadio {
   public:
     NRF24MiLightRadio(
@@ -27,13 +25,13 @@ class NRF24MiLightRadio : public MiLightRadio {
       RF24Channel listenChannel
     );
 
-    int begin();
-    bool available();
-    int read(uint8_t frame[], size_t &frame_length);
+    virtual int begin();
+    virtual bool available();
+    virtual int read(uint8_t frame[], size_t &frame_length);
     int dupesReceived();
-    int write(uint8_t frame[], size_t frame_length);
-    int resend();
-    int configure();
+    virtual int write(uint8_t frame[], size_t frame_length);
+    virtual int resend();
+    virtual int configure();
     const MiLightRadioConfig& config();
 
   private:
