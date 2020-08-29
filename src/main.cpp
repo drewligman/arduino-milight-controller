@@ -32,18 +32,16 @@ void setup() {
 	printf_begin();
 	printf("Setup\n");
 	radio.begin();
-	rf24.setPALevel(RF24_PA_MAX);
 
 	send_packet[0] = 0x00; // obfs key
 	send_packet[1] = 0x25; // protocolId, FUT089 = 0x25
 	send_packet[2] = 0x8B; // deviceId >> 8
 	send_packet[3] = 0x0D; // deviceId & 0xFF
-	send_packet[4] = 0x01; // cmd?
-	send_packet[5] = 0x00; // arg?
+	send_packet[4] = 0x81; // cmd?
+	send_packet[5] = 0x09; // arg?
 	send_packet[6] = 0x00; // seq #
 	send_packet[7] = 0x00; // groupId
 	Serial.println("---");
-
 
 }
 
@@ -61,11 +59,15 @@ void loop() {
 			printf("*%u*", radio.dupesReceived());
 		}
 	} else {
+		printf("%u: ", send_packet[6]);
 		V2RFEncoding::encodeV2Packet(send_packet);
 		radio.write(send_packet, PACKET_LEN);
+		for(size_t i = 0; i < 20; i++) {
+			radio.resend();
+		}
 		V2RFEncoding::decodeV2Packet(send_packet);
 		//send_packet[5]++;
-		//send_packet[6]++;
+		send_packet[6]++;
 		delay(500);
 	}
 }

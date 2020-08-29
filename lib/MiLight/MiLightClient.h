@@ -1,147 +1,76 @@
-#include <functional>
 #include <Arduino.h>
-#include <MiLightRadio.h>
-#include <MiLightRadioFactory.h>
-#include <MiLightRemoteConfig.h>
-#include <Settings.h>
-#include <GroupStateStore.h>
-#include <PacketSender.h>
-#include <TransitionController.h>
-#include <cstring>
-#include <map>
-#include <set>
+#include "MiLightRadio.h"
 
-#ifndef _MILIGHTCLIENT_H
-#define _MILIGHTCLIENT_H
+#define V2_PACKET_LEN 9
 
-//#define DEBUG_PRINTF
-//#define DEBUG_CLIENT_COMMANDS     // enable to show each individual change command (like hue, brightness, etc)
+#define V2_PROTOCOL_ID_INDEX 1
+#define V2_COMMAND_INDEX 4
+#define V2_ARGUMENT_INDEX 5
 
-#define FS(str) (reinterpret_cast<const __FlashStringHelper*>(str))
+#define V2_NUM_GROUPS 8
 
-namespace RequestKeys {
-  static const char TRANSITION[] = "transition";
+enum MiLightFUT089Command {
+  FUT089_ON_OFF = 0x01,
+  FUT089_COLOR = 0x02,
+  FUT089_BRIGHTNESS = 0x05,
+  FUT089_MODE = 0x06,
+  FUT089_KELVIN = 0x07,     // Controls Kelvin when in White mode
+  FUT089_SATURATION = 0x07,  // Controls Saturation when in Color mode
+  FUT089_NIGHT_MODE = 0x81
 };
 
-namespace TransitionParams {
-  static const char FIELD[] PROGMEM = "field";
-  static const char START_VALUE[] PROGMEM = "start_value";
-  static const char END_VALUE[] PROGMEM = "end_value";
-  static const char DURATION[] PROGMEM = "duration";
-  static const char PERIOD[] PROGMEM = "period";
-}
-
-// Used to determine RGB colros that are approximately white
-#define RGB_WHITE_THRESHOLD 10
+enum MiLightFUT089Arguments {
+  FUT089_MODE_SPEED_UP   = 0x12,
+  FUT089_MODE_SPEED_DOWN = 0x13,
+  FUT089_WHITE_MODE = 0x14,
+  FUT089_OFF_OFFSET = V2_NUM_GROUPS + 1
+};
 
 class MiLightClient {
-public:
-  // Used to indicate that the start value for a transition should be fetched from current state
-  static const int16_t FETCH_VALUE_FROM_STATE = -1;
-
-  MiLightClient(
-    RadioSwitchboard& radioSwitchboard,
-    PacketSender& packetSender,
-    GroupStateStore* stateStore,
-    Settings& settings,
-    TransitionController& transitions
-  );
-
-  ~MiLightClient() { }
-
-  typedef std::function<void(void)> EventHandler;
-
-  void prepare(const MiLightRemoteConfig* remoteConfig, const uint16_t deviceId = -1, const uint8_t groupId = -1);
-  void prepare(const MiLightRemoteType type, const uint16_t deviceId = -1, const uint8_t groupId = -1);
-
-  void setResendCount(const unsigned int resendCount);
-  bool available();
-  size_t read(uint8_t packet[]);
-  void write(uint8_t packet[]);
-
-  void setHeld(bool held);
-
-  // Common methods
-  void updateStatus(MiLightStatus status);
-  void updateStatus(MiLightStatus status, uint8_t groupId);
-  void pair();
-  void unpair();
-  void command(uint8_t command, uint8_t arg);
-  void updateMode(uint8_t mode);
-  void nextMode();
-  void previousMode();
-  void modeSpeedDown();
-  void modeSpeedUp();
-  void toggleStatus();
-
-  // RGBW methods
-  void updateHue(const uint16_t hue);
-  void updateBrightness(const uint8_t brightness);
-  void updateColorWhite();
-  void updateColorRaw(const uint8_t color);
-  void enableNightMode();
-  void updateColor(JsonVariant json);
-
-  // CCT methods
-  void updateTemperature(const uint8_t colorTemperature);
-  void decreaseTemperature();
-  void increaseTemperature();
-  void increaseBrightness();
-  void decreaseBrightness();
-
-  void updateSaturation(const uint8_t saturation);
-
-  void update(JsonObject object);
-  void handleCommand(JsonVariant command);
-  void handleCommands(JsonArray commands);
-  bool handleTransition(JsonObject args, JsonDocument& responseObj);
-  void handleTransition(GroupStateField field, JsonVariant value, float duration, int16_t startValue = FETCH_VALUE_FROM_STATE);
-  void handleEffect(const String& effect);
-
-  void onUpdateBegin(EventHandler handler);
-  void onUpdateEnd(EventHandler handler);
-
-  size_t getNumRadios() const;
-  std::shared_ptr<MiLightRadio> switchRadio(size_t radioIx);
-  std::shared_ptr<MiLightRadio> switchRadio(const MiLightRemoteConfig* remoteConfig);
-  MiLightRemoteConfig& currentRemoteConfig() const;
-
-  // Call to override the number of packet repeats that are sent.  Clear with clearRepeatsOverride
-  void setRepeatsOverride(size_t repeatsOverride);
-
-  // Clear the repeats override so that the default is used
-  void clearRepeatsOverride();
-
-  uint8_t parseStatus(JsonVariant object);
-  JsonVariant extractStatus(JsonObject object);
-
 protected:
-  struct cmp_str {
-    bool operator()(char const *a, char const *b) const {
-        return std::strcmp(a, b) < 0;
-    }
-  };
-  static const std::map<const char*, std::function<void(MiLightClient*, JsonVariant)>, cmp_str> FIELD_SETTERS;
-  static const char* FIELD_ORDERINGS[];
+    MiLightRadio _radio;
+    size_t _resendCount;
 
-  RadioSwitchboard& radioSwitchboard;
-  std::vector<std::shared_ptr<MiLightRadio>> radios;
-  std::shared_ptr<MiLightRadio> currentRadio;
-  const MiLightRemoteConfig* currentRemote;
+    uint16_t _deviceId;
+    uint8_t _groupId;
+    uint8_t _seqN;
 
-  EventHandler updateBeginHandler;
-  EventHandler updateEndHandler;
+public:
+    MiLightClient(
+        MiLightRadio& radio,
+        size_t resendCount = 20,
+        uint8_t seqN = 0
+    );
 
-  GroupStateStore* stateStore;
-  const GroupState* currentState;
-  Settings& settings;
-  PacketSender& packetSender;
-  TransitionController& transitions;
+    ~MiLightClient() { }
 
-  // If set, override the number of packet repeats used.
-  size_t repeatsOverride;
+    void setGroup(const uint8_t groupId, const uint16_t deviceId);
+    void setResendCount(const size_t resendCount);
 
-  void flushPacket();
+    void begin() { _radio.begin(); }
+    bool available() { return _radio.available(); }
+    size_t read(uint8_t packet[]);
+    void write(uint8_t packet[]);
+    void sendCommand(const uint8_t command, const uint8_t arg);
+
+    // Common methods
+    void updateStatus(const bool status);
+    void updateGlobalStatus(const bool status);
+    void pair();
+    void unpair();
+
+    void updateMode(const uint8_t mode);
+    void modeSpeedDown();
+    void modeSpeedUp();
+
+    // RGBW methods
+    //void updateHue(const uint16_t hue);
+    void updateColor(const uint8_t color);
+    void updateBrightness(const uint8_t brightness);
+    void updateColorWhite();
+    void enableNightMode();
+
+    // CCT methods
+    void updateTemperature(const uint8_t colorTemperature);
+    void updateSaturation(const uint8_t saturation);
 };
-
-#endif

@@ -23,6 +23,7 @@ PL1167_nRF24::PL1167_nRF24(RF24 &radio)
 int PL1167_nRF24::open() {
   _radio.begin();
   _radio.setAutoAck(false);
+  _radio.setPALevel(RF24_PA_MAX);
   _radio.setDataRate(RF24_1MBPS);
   _radio.disableCRC();
 
@@ -154,7 +155,6 @@ int PL1167_nRF24::transmit(uint8_t channel) {
 
   yield();
 
-  printf("\"%u\", ", _radio.getChannel());
   _radio.write(tmp, outp);
   return 0;
 }

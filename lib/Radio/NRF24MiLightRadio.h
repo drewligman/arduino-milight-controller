@@ -16,6 +16,8 @@
 #ifndef _NRF24_MILIGHT_RADIO_H_
 #define _NRF24_MILIGHT_RADIO_H_
 
+#define DEFAULT_TIME_BETWEEN_RETRANSMISSIONS_uS	350
+
 class NRF24MiLightRadio : public MiLightRadio {
   public:
     NRF24MiLightRadio(
@@ -32,7 +34,6 @@ class NRF24MiLightRadio : public MiLightRadio {
     int write(uint8_t frame[], size_t frame_length);
     int resend();
     int configure();
-    void scanChannels();
     const MiLightRadioConfig& config();
 
   private:

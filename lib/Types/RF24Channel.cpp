@@ -38,7 +38,7 @@ std::vector<RF24Channel> RF24ChannelHelpers::allValues() {
   std::vector<RF24Channel> vec;
 
   for (size_t i = 0; i < size(RF24_CHANNEL_NAMES); ++i) {
-    vec.push_back(valueFromName(RF24_CHANNEL_NAMES[i]));
+    vec.push_back(static_cast<RF24Channel>(i));
   }
 
   return vec;

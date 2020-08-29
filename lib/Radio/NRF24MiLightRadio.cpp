@@ -123,11 +123,12 @@ int NRF24MiLightRadio::write(uint8_t frame[], size_t frame_length) {
 }
 
 int NRF24MiLightRadio::resend() {
-    uint8_t channel = 35;
-    for(size_t reps = 0; reps < 20; reps++) {
-        _pl1167.writeFIFO(_out_packet, _out_packet[0] + 1);
-        _pl1167.transmit(channel);
-    }
+  for (size_t i = 0; i < MiLightRadioConfig::NUM_CHANNELS; i++)
+  {
+    _pl1167.writeFIFO(_out_packet, _out_packet[0] + 1);
+    _pl1167.transmit(_config.channels[i]);
+    delayMicroseconds(DEFAULT_TIME_BETWEEN_RETRANSMISSIONS_uS);
+  }
 
   return 0;
 }
