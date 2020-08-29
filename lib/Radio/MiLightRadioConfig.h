@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Size.h>
 #include <RadioUtils.h>
 
 #ifndef _MILIGHT_RADIO_CONFIG

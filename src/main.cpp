@@ -2,8 +2,6 @@
 #include <RF24.h>
 #include <printf.h>
 
-#include "RF24PowerLevel.h"
-#include "RF24Channel.h"
 #include "NRF24MiLightRadio.h"
 #include "MiLightRadioConfig.h"
 #include "V2RFEncoding.h"
@@ -24,6 +22,7 @@ NRF24MiLightRadio radio(
 MiLightClient milight(radio);
 
 uint8_t packet[V2_PACKET_LEN];
+uint8_t v = 0;
 
 void printPacket(uint8_t* packet) {
 	for(int i = 0; i < 9; i++) {
@@ -37,15 +36,13 @@ void setup() {
 	printf_begin();
 	printf("Setup\n");
 	milight.begin();
+	milight.setIdentity(0x8B0D);
+	milight.setGroup(0);
 }
 
 void loop() {
-	if(milight.available() && milight.read(packet)) {
-		printPacket(packet);
-	}
-
-	milight.setIdentity(0x8B0D);
-	milight.setGroup(0);
-	milight.updateStatus(true);
-	delay(1000);
+	milight.updateColor(v += 10);
+	milight.updateSaturation(100);
+	milight.updateBrightness(100);
+	milight.updateBrightness(0);
 }

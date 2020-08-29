@@ -1,7 +1,8 @@
 // Adapated from code from henryk
 
-#include <PL1167_nRF24.h>
-#include <NRF24MiLightRadio.h>
+#include "PL1167_nRF24.h"
+#include "NRF24MiLightRadio.h"
+#include "RF24Channel.h"
 
 #define PACKET_ID(packet, packet_length) ( (packet[1] << 8) | packet[packet_length - 1] )
 

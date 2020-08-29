@@ -12,8 +12,6 @@ enum class RF24Channel {
 
 class RF24ChannelHelpers {
 public:
-  static String nameFromValue(const RF24Channel& value);
-  static RF24Channel valueFromName(const String& name);
   static RF24Channel defaultValue();
   static std::vector<RF24Channel> allValues();
 };

@@ -25,10 +25,12 @@ void MiLightClient::setResendCount(const size_t resendCount) {
 size_t MiLightClient::read(uint8_t packet[]) {
     size_t packet_length = V2_PACKET_LEN;
     _radio.read(packet, packet_length);
+    V2RFEncoding::decodeV2Packet(packet);
     return packet_length;
 }
 
 void MiLightClient::write(uint8_t packet[]) {
+    V2RFEncoding::encodeV2Packet(packet);
     _radio.write(packet, V2_PACKET_LEN);
     for (size_t i = 1; i < _resendCount; i++) {
         _radio.resend();
@@ -51,8 +53,6 @@ void MiLightClient::sendCommand(
     packet[V2_GROUP_INDEX] = _groupId;
     packet[V2_CHECKSUM_INDEX] = 0x00;
 
-    V2RFEncoding::encodeV2Packet(packet);
-
     write(packet);
 }
 
@@ -71,7 +71,7 @@ void MiLightClient::unpair() {
 }
 
 void MiLightClient::updateMode(const uint8_t mode) {
-    sendCommand(FUT089_MODE, std::max<uint8_t>(mode, 0x08));
+    sendCommand(FUT089_MODE, std::min<uint8_t>(mode, 0x08));
 }
 
 void MiLightClient::modeSpeedDown() {
@@ -92,7 +92,7 @@ void MiLightClient::updateColor(const uint8_t color) {
 }
 
 void MiLightClient::updateBrightness(const uint8_t brightness) {
-    sendCommand(FUT089_BRIGHTNESS, std::max<uint8_t>(brightness, 0x64));
+    sendCommand(FUT089_BRIGHTNESS, std::min<uint8_t>(brightness, 0x64));
 }
 
 void MiLightClient::updateColorWhite() {
@@ -104,10 +104,10 @@ void MiLightClient::enableNightMode() {
 }
 
 void MiLightClient::updateTemperature(const uint8_t temperature) {
-    sendCommand(FUT089_KELVIN, std::max<unsigned char>(temperature, 0x64));
+    sendCommand(FUT089_KELVIN, std::min<unsigned char>(temperature, 0x64));
 }
 
 void MiLightClient::updateSaturation(const uint8_t saturation) {
     // Saturation range is reversed: 0x00 is fully saturated, 0x64 fully desaturated
-    sendCommand(FUT089_SATURATION, 0x64 - std::max<uint8_t>(saturation, 0x64));
+    sendCommand(FUT089_SATURATION, 0x64 - std::min<uint8_t>(saturation, 0x64));
 }

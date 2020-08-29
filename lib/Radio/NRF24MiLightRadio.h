@@ -7,11 +7,12 @@
 #endif
 
 #include <RF24.h>
-#include <PL1167_nRF24.h>
-#include <MiLightRadioConfig.h>
-#include <MiLightRadio.h>
-#include <RF24Channel.h>
 #include <vector>
+
+#include "PL1167_nRF24.h"
+#include "MiLightRadioConfig.h"
+#include "MiLightRadio.h"
+#include "RF24Channel.h"
 
 #ifndef _NRF24_MILIGHT_RADIO_H_
 #define _NRF24_MILIGHT_RADIO_H_
